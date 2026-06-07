@@ -1,6 +1,5 @@
 node_modules/
 dist/
-public/build/
 build/
 uploads/
 *.log

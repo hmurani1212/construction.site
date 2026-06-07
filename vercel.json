@@ -11,11 +11,15 @@
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "app.js" },
-    { "src": "/api-docs(.*)", "dest": "app.js" },
-    { "src": "/health", "dest": "app.js" },
-    { "src": "/sitemap.xml", "dest": "app.js" },
-    { "handle": "filesystem" },
+    { "src": "/api/(.*)", "dest": "/app.js" },
+    { "src": "/api-docs(.*)", "dest": "/app.js" },
+    { "src": "/health", "dest": "/app.js" },
+    { "src": "/sitemap.xml", "dest": "/app.js" },
+    { "src": "/static/(.*)", "dest": "/public/build/static/$1" },
+    { "src": "/favicon.ico", "dest": "/public/build/favicon.ico" },
+    { "src": "/manifest.json", "dest": "/public/build/manifest.json" },
+    { "src": "/asset-manifest.json", "dest": "/public/build/asset-manifest.json" },
+    { "src": "/robots.txt", "dest": "/public/build/robots.txt" },
     { "src": "/(.*)", "dest": "/public/build/index.html" }
   ]
 }

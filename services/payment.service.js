@@ -8,8 +8,17 @@ const payment_model = require("../models/payment.model"); // Import payment mode
 const payment_data_repository = require("../data_repositories/payment.data_repository");
 const order_data_repository = require("../data_repositories/order.data_repository");
 
-// Initialize Stripe
-const stripe_client = stripe(STRIPE_SECRET_KEY);
+let stripe_client = null;
+
+const get_stripe_client = () => {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error("Stripe API key is not configured. Set STRIPE_SECRET_KEY in environment variables.");
+  }
+  if (!stripe_client) {
+    stripe_client = stripe(STRIPE_SECRET_KEY);
+  }
+  return stripe_client;
+};
 
 class payment_service {
   constructor() {
@@ -80,7 +89,7 @@ class payment_service {
       // Create Stripe Payment Intent
       // Using USD for test mode - in production, you can enable PKR in Stripe dashboard
       // Note: Cannot use both automatic_payment_methods and confirmation_method together
-      const payment_intent = await stripe_client.paymentIntents.create({
+      const payment_intent = await get_stripe_client().paymentIntents.create({
         amount: final_amount_cents,
         currency: "usd", // Explicitly use USD
         automatic_payment_methods: {
@@ -152,7 +161,7 @@ class payment_service {
       console.log(`FILE: payment.service.js | confirm_payment | Confirming payment: ${payment_intent_id}`);
 
       // Retrieve payment intent from Stripe
-      const payment_intent = await stripe_client.paymentIntents.retrieve(payment_intent_id);
+      const payment_intent = await get_stripe_client().paymentIntents.retrieve(payment_intent_id);
 
       // Get payment record
       const payment = await payment_data_repository.get_payment_by_stripe_intent(payment_intent_id);
@@ -179,7 +188,7 @@ class payment_service {
         // Check if there's a charge that succeeded
         if (payment_intent.latest_charge) {
           try {
-            const charge = await stripe_client.charges.retrieve(payment_intent.latest_charge);
+            const charge = await get_stripe_client().charges.retrieve(payment_intent.latest_charge);
             if (charge.status === "succeeded" || charge.paid === true) {
               payment_status = "completed";
               order_payment_status = "paid";

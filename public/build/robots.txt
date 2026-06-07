@@ -1,0 +1,40 @@
+# robots.txt for Click Mart
+# https://www.clickmartgrocery.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin and account pages from indexing
+Disallow: /AdminDashboard
+Disallow: /MyAccountOrder
+Disallow: /MyAccountSetting
+Disallow: /MyAccountFavorites
+Disallow: /MyAcconutNotification
+Disallow: /MyAcconutPaymentMethod
+Disallow: /MyAccountAddress
+Disallow: /MyAccountForgetPassword
+Disallow: /MyAccountSignIn
+Disallow: /MyAccountSignUp
+Disallow: /UserProfile
+Disallow: /ShopCart
+Disallow: /ShopCheckOut
+Disallow: /ShopWishList
+Disallow: /payment/
+
+# Allow important pages
+Allow: /
+Allow: /Shop
+Allow: /SingleShop/
+Allow: /AboutUs
+Allow: /Contact
+Allow: /Blog
+Allow: /Faq
+Allow: /Coupons
+Allow: /Careers
+Allow: /helpcenter
+
+# Sitemap location (update with your actual domain)
+Sitemap: https://www.clickmartgrocery.com/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1

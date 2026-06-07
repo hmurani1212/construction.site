@@ -3,8 +3,14 @@ const user_model = require("../models/user.model");
 const order_model = require("../models/order.model");
 const product_model = require("../models/product.model");
 const email_service = require("./email.service");
-const bullmq_manager = require("../_core_app_connectivities/bullmq");
 const moment = require("moment");
+
+// BullMQ requires persistent Redis — skip on Vercel serverless
+const IS_VERCEL = process.env.VERCEL === "1";
+let bullmq_manager = null;
+if (!IS_VERCEL) {
+  bullmq_manager = require("../_core_app_connectivities/bullmq");
+}
 
 const QUEUE_NAMES = {
   WEEKLY_NOTIFICATION: 'weekly-notifications',
@@ -24,6 +30,12 @@ class notification_service {
   async initialize() {
     if (this.is_initialized) {
       console.log('FILE: notification.service.js | initialize | Service already initialized');
+      return;
+    }
+
+    if (!bullmq_manager) {
+      console.log('FILE: notification.service.js | initialize | BullMQ skipped (serverless environment)');
+      this.is_initialized = true;
       return;
     }
 
@@ -225,6 +237,8 @@ class notification_service {
    */
   async sendWeeklyNotificationsToAll() {
     try {
+      if (!bullmq_manager) return;
+
       console.log('FILE: notification.service.js | sendWeeklyNotificationsToAll | Sending weekly notifications to all enabled users');
 
       const settings = await notification_settings_data_repository.get_users_with_notification_enabled(
@@ -254,6 +268,8 @@ class notification_service {
    */
   async sendAccountSummariesToAll() {
     try {
+      if (!bullmq_manager) return;
+
       console.log('FILE: notification.service.js | sendAccountSummariesToAll | Sending account summaries to all enabled users');
 
       const settings = await notification_settings_data_repository.get_users_with_notification_enabled(
@@ -283,6 +299,8 @@ class notification_service {
    */
   async notifyNewProduct(product_id) {
     try {
+      if (!bullmq_manager) return;
+
       console.log(`FILE: notification.service.js | notifyNewProduct | Notifying users about new product: ${product_id}`);
 
       const settings = await notification_settings_data_repository.get_users_with_notification_enabled(

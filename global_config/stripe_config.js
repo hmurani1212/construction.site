@@ -1,5 +1,4 @@
-// Stripe Configuration
-// Set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in your .env file
+// Stripe Configuration — set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in Vercel env vars
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || "";
 const STRIPE_WEBHOOK_SECRET = ""; // Add webhook secret if using webhooks
