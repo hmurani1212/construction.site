@@ -168,13 +168,19 @@ mongoose_connection.on('connected', () => {
   initializeNotificationService();
 });
 
-app.listen(PORT, () => {
-  console.log(`FILE: app.js | Server is running on port ${PORT}`);
-  console.log(`FILE: app.js | MongoDB connection status: ${mongoose_connection.readyState === 1 ? "Connected" : "Disconnected"}`);
-  
-  // Initialize notification service if MongoDB is already connected
-  if (mongoose_connection.readyState === 1) {
-    initializeNotificationService();
-  }
-});
+// Only call app.listen when running locally (not on Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`FILE: app.js | Server is running on port ${PORT}`);
+    console.log(`FILE: app.js | MongoDB connection status: ${mongoose_connection.readyState === 1 ? "Connected" : "Disconnected"}`);
+    
+    // Initialize notification service if MongoDB is already connected
+    if (mongoose_connection.readyState === 1) {
+      initializeNotificationService();
+    }
+  });
+}
+
+// Export app for Vercel serverless deployment
+module.exports = app;
 

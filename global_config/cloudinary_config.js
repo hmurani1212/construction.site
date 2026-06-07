@@ -7,10 +7,10 @@
 
 const cloudinary = require("cloudinary").v2;
 
-// Cloudinary Configuration
-const CLOUDINARY_CLOUD_NAME = "dbqvcdgvr";
-const CLOUDINARY_API_KEY = "744511866118717";
-const CLOUDINARY_API_SECRET = "bUyUbkeS_H3oX49kC8fvAkvtX34";
+// Cloudinary Configuration - set via environment variables or use defaults below
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "dbqvcdgvr";
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || "744511866118717";
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || "bUyUbkeS_H3oX49kC8fvAkvtX34";
 
 // Configure Cloudinary
 cloudinary.config({
