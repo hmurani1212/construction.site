@@ -3,8 +3,14 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 const mongoose_connection = require("./_core_app_connectivities/db_mongo_mongoose");
-const redisConnection = require("./_core_app_connectivities/redis");
 const { swagger_ui, swagger_spec } = require("./swagger");
+
+// Redis and BullMQ require persistent connections — not compatible with Vercel serverless.
+// Only initialize them in non-serverless (local/PM2) environments.
+const IS_VERCEL = process.env.VERCEL === '1';
+if (!IS_VERCEL) {
+  require("./_core_app_connectivities/redis");
+}
 
 // CRITICAL: Import all models FIRST in dependency order to ensure they are registered on the same connection
 // This must be done before importing routes/services that use these models
@@ -34,9 +40,7 @@ const notification_routes = require("./routes/notification.routes");
 const comment_routes = require("./routes/comment.routes");
 const quote_routes = require("./routes/quote.routes");
 const sitemap_routes = require("./routes/sitemap.routes");
-const { initializeBullBoard } = require("./admin_board");
 const apiKeyMiddleware = require("./middlewares/apiKey.middleware");
-// const path = require("path");
 
 const app = express();
 
@@ -51,9 +55,11 @@ app.use("/api-docs", swagger_ui.serve, swagger_ui.setup(swagger_spec, {
   customSiteTitle: "BuildMart Construction Materials API",
 }));
 
-// Initialize Bull Board Dashboard (for monitoring BullMQ queues)
-// Access at: http://localhost:PORT/admin/queues
-initializeBullBoard(app, '/admin/queues');
+// Bull Board requires persistent Redis connections — only initialize locally, not on Vercel
+if (!IS_VERCEL) {
+  const { initializeBullBoard } = require("./admin_board");
+  initializeBullBoard(app, '/admin/queues');
+}
 
 // Health check endpoint (excluded from API key validation)
 /**
@@ -111,30 +117,26 @@ app.use("/api/v1/notifications", notification_routes);
 app.use("/api/v1/comments", comment_routes);
 app.use("/api/v1/quotes", quote_routes);
 
-// Sitemap route (before static files to ensure it's accessible)
+// Sitemap route
 app.use("/", sitemap_routes);
 
-// Serve static files from React app build directory
-// Frontend build output is placed in public/build via BUILD_PATH in Frontend/package.json
-const frontendBuildPath = path.join(__dirname, "public", "build");
-app.use(express.static(frontendBuildPath));
-
-// Catch-all handler: send back React's index.html file for any non-API routes
-// This ensures React Router works correctly
-app.get("*", (req, res) => {
-  // Don't serve index.html for API routes
-  if (req.path.startsWith("/api/") || req.path.startsWith("/api-docs") || req.path.startsWith("/admin/queues")) {
-    return res.status(404).json({
-      STATUS: "ERROR",
-      ERROR_FILTER: "INVALID_REQUEST",
-      ERROR_CODE: "VTAPP-99999",
-      ERROR_DESCRIPTION: "Route not found",
-    });
-  }
-  
-  // Serve React app for all other routes
-  res.sendFile(path.join(frontendBuildPath, "index.html"));
-});
+// Static files: served by Vercel CDN in production (see vercel.json).
+// Locally, Express serves them directly from public/build.
+if (!IS_VERCEL) {
+  const frontendBuildPath = path.join(__dirname, "public", "build");
+  app.use(express.static(frontendBuildPath));
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/api-docs") || req.path.startsWith("/admin/queues")) {
+      return res.status(404).json({
+        STATUS: "ERROR",
+        ERROR_FILTER: "INVALID_REQUEST",
+        ERROR_CODE: "VTAPP-99999",
+        ERROR_DESCRIPTION: "Route not found",
+      });
+    }
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+}
 
 // Error handler
 app.use((err, req, res, next) => {

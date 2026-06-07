@@ -4,12 +4,18 @@
     {
       "src": "app.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "public/build/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.js"
-    }
+    { "src": "/api/(.*)", "dest": "app.js" },
+    { "src": "/api-docs(.*)", "dest": "app.js" },
+    { "src": "/health", "dest": "app.js" },
+    { "src": "/sitemap.xml", "dest": "app.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/public/build/index.html" }
   ]
 }
